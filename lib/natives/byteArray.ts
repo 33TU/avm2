@@ -24,6 +24,7 @@ import { release, notImplemented, unexpected, isNumeric, defineNonEnumerableProp
 import { AMF0, AMF3 } from '../amf';
 import { Bytecode } from '../abc/ops';
 import { AXClass } from '../run/AXClass';
+import { ByteArrayStorage } from './ByteArrayStorage';
 
 export enum AMFEncoding {
 	AMF0 = 0,
@@ -175,7 +176,40 @@ export class ByteArray extends ASObject implements IDataInput, IDataOutput {
 	private _bitBuffer: number;
 	private _bitLength: number;
 
-	private _resetViews: () => void;
+	private _u8: Uint8Array;
+	private _memoryStorage: ByteArrayStorage;
+	private _ensureCapacity: (length: number) => void;
+
+	/** Allocate a domain-memory view only when this ByteArray is bound. */
+	public get internalMemoryStorage(): ByteArrayStorage {
+		return this._memoryStorage || (this._memoryStorage = { view: new DataView(this._buffer) });
+	}
+
+	private _resetViews(): void {
+		DataBuffer.prototype['_resetViews'].call(this);
+		if (this._memoryStorage) {
+			this._memoryStorage.view = new DataView(this._buffer);
+		}
+	}
+
+	public get length(): number {
+		return this._length;
+	}
+
+	public set length(value: number) {
+		value = value >>> 0;
+		const oldLength = this._length;
+		this._ensureCapacity(value);
+		// Clear truncated storage so later writes past the end expose a zero-filled gap.
+		// Explicit length growth must also zero bytes exposed within retained capacity.
+		this._u8.fill(0, Math.min(oldLength, value), Math.max(oldLength, value));
+		this._length = value;
+		this._position = Math.min(this._position, value);
+	}
+
+	public clear(): void {
+		this.length = 0;
+	}
 
 	readBytes: (bytes: ByteArray, offset?: number /*uint*/, length?: number /*uint*/) => void;
 	readBoolean: () => boolean;
@@ -232,7 +266,6 @@ export class ByteArray extends ASObject implements IDataInput, IDataOutput {
 	readRawBytes: () => Int8Array;
 	writeRawBytes: (bytes: Uint8Array) => void;
 	position: number;
-	length: number;
 
 	axGetPublicProperty(nm: any): any {
 		if (typeof nm === 'number' || isNumeric(nm = axCoerceName(nm))) {
