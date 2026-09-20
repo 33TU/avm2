@@ -8,6 +8,7 @@ export interface IAVM2Settings {
 	CHEK_TRAIT_GET_CALL: boolean;
 	CHEK_TRAIT_FIND_PROP: boolean;
 	CHEK_TRAIT_SET: boolean;
+	CACHE_DOMAIN_MEMORY_WRITES: boolean;
 	CHEK_SUPER_TRAITS: boolean;
 	CHECK_FAST_CONSTRUCTOR: boolean;
 	OPTIMISE_ON_IR: boolean;
@@ -167,6 +168,8 @@ export const Settings: IAVM2Settings = ConfigManager.instance.addStore('avm2', {
 	 * @todo Atm we not call coerse, result can be unstable
 	 */
 	CHEK_TRAIT_SET: true,
+	// Cache resolved writable slots only in methods using domain-memory opcodes.
+	CACHE_DOMAIN_MEMORY_WRITES: true,
 	/**
 	 * @description Check super class traits when field was extended, this can be unstable and has performance hit
 	 */

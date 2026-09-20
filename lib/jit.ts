@@ -21,6 +21,7 @@ import { ASObject } from './nat/ASObject';
 import { escapeAttributeValue, escapeElementValue } from './natives/xml';
 import { COMPILATION_FAIL_REASON, COMPILER_DEFAULT_OPT, COMPILER_OPT_FLAGS } from './flags';
 import { DomainMemoryBinding } from './natives/ByteArrayStorage';
+import { createSlotWriter } from './run/createSlotWriter';
 
 // generators
 import { analyze, IAnalyseResult, IAnalyzeError } from './gen/analyze';
@@ -316,6 +317,7 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 		js0.push(`${namesIndent}let domainMemory; // domainMemory`);
 
 	const names: Multiname[] = state.names;
+	const slotWriters = new Set<number>();
 	const getname = (n: number) => emitInlineMultiname(state, state.getMultinameIndex(n));
 
 	js0.push(`${namesIndent}let sec = context.sec;`);
@@ -1607,7 +1609,13 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 						state.emitBeginMain('} else {');
 					}
 
-					state.emitMain(`context.setproperty(${getname(param(0))}, ${stack0}, ${stack1});`);
+					if (Settings.CACHE_DOMAIN_MEMORY_WRITES && domMem) {
+						const nameIndex = state.getMultinameIndex(param(0));
+						slotWriters.add(nameIndex);
+						state.emitMain(`setProperty${nameIndex}(${stack0}, ${stack1});`);
+					} else {
+						state.emitMain(`context.setproperty(${getname(param(0))}, ${stack0}, ${stack1});`);
+					}
 
 					if (fast) {
 						state.emitEndMain();
@@ -1977,6 +1985,9 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 	js0[LOCALS_POS] = locals.join('\n');
 
 	const genHeader = ['const AX_CLASS_SYMBOL = context.AX_CLASS_SYMBOL;'];
+	slotWriters.forEach(index => {
+		genHeader.push(`const setProperty${index} = context.createSlotWriter(${index});\n`);
+	});
 	const genBody = [];
 
 	let resulMain = state.mainBlock;
@@ -2198,6 +2209,11 @@ export class Context {
 			return temp;
 
 		return b.axGetProperty(mn);
+	}
+
+	createSlotWriter(index: number) {
+		const mn = this.names[index];
+		return createSlotWriter(mn, (value, object) => this.setproperty(mn, value, <AXClass> object));
 	}
 
 	setproperty(mn: Multiname, value: any, obj: AXClass | null) {
