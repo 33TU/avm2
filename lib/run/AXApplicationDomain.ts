@@ -132,6 +132,13 @@ export class AXApplicationDomain {
 		return globalInfo.global || (globalInfo.global = this.sec.createAXGlobal(this, globalInfo));
 	}
 
+	public findDefinition(mn: Multiname): AXGlobal {
+		const global = this.findProperty(mn, true, true);
+		if (!global)
+			this.sec.throwError('ReferenceError', Errors.UndefinedVarError, mn.name);
+		return global;
+	}
+
 	public getClass(mn: Multiname): AXClass {
 		const classObject = <AXClass> this.getProperty(mn, true, true);
 

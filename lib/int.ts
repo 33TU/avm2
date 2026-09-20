@@ -619,6 +619,9 @@ function _interpret(methodInfo: MethodInfo, savedScope: Scope, callee: AXFunctio
 					case Bytecode.NEWCATCH:
 						stack.push(sec.createCatch(frame.body.catchBlocks[frame.u30()], scopes.topScope()));
 						break;
+					case Bytecode.FINDDEF:
+						stack.push(abc.applicationDomain.findDefinition(abc.getMultiname(frame.u30())));
+						break;
 					case Bytecode.FINDPROPERTY:
 					case Bytecode.FINDPROPSTRICT:
 						popNameInto(stack, abc.getMultiname(frame.u30()), rn);

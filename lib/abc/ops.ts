@@ -643,7 +643,7 @@ export function defineBytecodes() {
 	// define(Bytecode.UNDEFINED, "");
 	define(Bytecode.FINDPROPSTRICT, 'e');
 	define(Bytecode.FINDPROPERTY, 'e');
-	define(Bytecode.FINDDEF, '');
+	define(Bytecode.FINDDEF, 'e');
 	define(Bytecode.GETLEX, 'e');
 	define(Bytecode.SETPROPERTY, 'e');
 	define(Bytecode.GETLOCAL, 'e');

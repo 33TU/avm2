@@ -669,6 +669,10 @@ export function analyze(methodInfo: MethodInfo): IAnalyseResult | IAnalyzeError 
 
 				break;
 			}
+			case Bytecode.FINDDEF:
+				ins = new Instruction(oldi, z, u30(state), 1);
+				ins.returnTypeId = lastType = ++type;
+				break;
 			case Bytecode.FINDPROPSTRICT: {
 				const [index, dyn, d] = mn(state);
 				ins = (new Instruction(oldi, z + dyn, index, 1 + d));
