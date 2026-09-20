@@ -390,9 +390,11 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 		if (jumps.indexOf(z.position) >= 0) {
 			// drop aliases for stack, because branching, alias outside branch can be invalid
 			state.dropAllAliases();
-			// if we are in any try-catch-blocks, we must close them
-			//if (state.openTryCatchGroups)
-			state.openTryCatchGroups.forEach(e => emitCloseTryCatch(state, e));
+			// Close innermost first so each handler stays paired with its try.
+			// Keep the stack order intact for reopening below.
+			for (let c = state.openTryCatchGroups.length - 1; c >= 0; c--) {
+				emitCloseTryCatch(state, state.openTryCatchGroups[c]);
+			}
 
 			if (genBrancher) {
 				state.moveIndent(-1);
