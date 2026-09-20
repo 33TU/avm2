@@ -429,7 +429,7 @@ function addTraits(cls: AXClass, info: ClassInfo, describingClass: boolean,
 					val.$Bguri = ns.reflectedURI;
 					const typeName = (<SlotTraitInfo>t).typeName;
 					val.$Bgtype = typeName ? typeName.toFQNString(true) : '*';
-					val.$Bgaccess = 'readwrite';
+					val.$Bgaccess = t.kind === TRAIT.Const ? 'readonly' : 'readwrite';
 					val.$Bgmetadata = flags & DescribeTypeFlags.INCLUDE_METADATA ?
 						describeMetadataList(sec, metadata) :
 						null;
