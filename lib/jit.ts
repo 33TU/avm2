@@ -20,6 +20,7 @@ import { Bytecode } from './Bytecode';
 import { ASObject } from './nat/ASObject';
 import { escapeAttributeValue, escapeElementValue } from './natives/xml';
 import { COMPILATION_FAIL_REASON, COMPILER_DEFAULT_OPT, COMPILER_OPT_FLAGS } from './flags';
+import { DomainMemoryBinding } from './natives/ByteArrayStorage';
 
 // generators
 import { analyze, IAnalyseResult, IAnalyzeError } from './gen/analyze';
@@ -2044,7 +2045,7 @@ export class Context {
 	/*jit internal*/ readonly axCoerceString: Function = axCoerceString;
 	/*jit internal*/ readonly axCheckFilter: Function = axCheckFilter;
 	/*jit internal*/ readonly internNamespace: Function = internNamespace;
-	private domain: any;
+	private domain: { internal_memoryBinding: DomainMemoryBinding };
 
 	public readonly emptyArray: any;
 	public readonly AX_CLASS_SYMBOL = IS_AX_CLASS;
@@ -2062,7 +2063,7 @@ export class Context {
 		this.emptyArray.value = [];
 	}
 
-	get domainMemory(): DataView {
+	get domainMemoryBinding(): DomainMemoryBinding {
 		if (!this.domain) {
 			this.domain = (<any> this.sec).flash.system.ApplicationDomain.axClass.currentDomain;
 
@@ -2072,7 +2073,7 @@ export class Context {
 			}
 		}
 
-		return this.domain.internal_memoryView;
+		return this.domain.internal_memoryBinding;
 	}
 
 	public getRegExp(args: [string, string?]) {
