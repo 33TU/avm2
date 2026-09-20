@@ -27,10 +27,10 @@ export { getCurrentABC } from './lib/run/getCurrentABC';
 export { axCoerceString } from './lib/run/axCoerceString';
 export { axIsCallable } from './lib/run/axIsCallable';
 export { axIsTypeString } from './lib/run/axIsTypeString';
-export { AXClass } from './lib/run/AXClass';
-export { AXFunction } from './lib/run/AXFunction';
-export { AXXMLClass } from './lib/run/AXXMLClass';
-export { AXObject } from './lib/run/AXObject';
+export type { AXClass } from './lib/run/AXClass';
+export type { AXFunction } from './lib/run/AXFunction';
+export type { AXXMLClass } from './lib/run/AXXMLClass';
+export type { AXObject } from './lib/run/AXObject';
 export { NamespaceType } from './lib/abc/lazy/NamespaceType';
 export { Multiname } from './lib/abc/lazy/Multiname';
 
@@ -52,7 +52,7 @@ export { initializeAXBasePrototype } from './lib/run/initializeAXBasePrototype';
 export { ActiveLoaderContext, OrphanManager } from './lib/run/axConstruct';
 export { ABCCatalog } from './lib/abc/lazy/ABCCatalog';
 
-export { IPlayerGlobal } from './lib/IPlayerGlobal';
+export type { IPlayerGlobal } from './lib/IPlayerGlobal';
 export { AVM2Handler } from './lib/AVM2Handler';
 export { AVM2LoadLibrariesFlags } from './lib/AVM2LoadLibrariesFlags';
 
