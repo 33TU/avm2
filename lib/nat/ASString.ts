@@ -10,6 +10,22 @@ import { as3ToLowerCase } from './as3ToLowerCase';
 import { ASRegExp } from './ASRegExp';
 import { ASFunction } from './ASFunction';
 
+function flashSubstr(value: string, from: number, length: number): string {
+	from = Math.trunc(Number(from)) || 0;
+	from = from < 0 ? Math.max(value.length + from, 0) : Math.min(from, value.length);
+	length = Number(length);
+	if (length <= -1 && Number.isFinite(length)) {
+		// Flash wraps negative lengths relative to the whole string, but
+		// returns empty if the resulting span reaches or passes its end.
+		length = Math.max(0, Math.trunc(value.length + length));
+		if (from + length >= value.length)
+			return '';
+	} else {
+		length = Math.max(0, Math.trunc(Math.min(length, 0x7fffffff))) || 0;
+	}
+	return value.slice(from, from + length);
+}
+
 export class ASString extends ASObject {
 	static classNatives: any [] = [String];
 
@@ -170,10 +186,7 @@ export class ASString extends ASObject {
 	}
 
 	substr(from: number, length?: number) {
-		if (length == -1) {
-			length = this.value.length - from - 1;
-		}
-		return this.value.substr(from, length);
+		return flashSubstr(this.value, from, arguments.length < 2 ? 0x7fffffff : length);
 	}
 
 	toLocaleLowerCase() {
@@ -260,7 +273,7 @@ export class ASString extends ASObject {
 
 	generic_substr(from: number, length?: number) {
 		const receiver = this == undefined ? '' : this;
-		return String.prototype.substr.call(receiver, from, length);
+		return flashSubstr(String(receiver), from, arguments.length < 2 ? 0x7fffffff : length);
 	}
 
 	generic_toLowerCase() {
