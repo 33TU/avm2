@@ -1200,6 +1200,10 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 					state.emitMain(`${targetStack} = sec.applyType(${targetStack}, [${pp.join(', ')}]);`);
 					break;
 				}
+				case Bytecode.FINDDEF:
+					state.popAnyAlias(stackF(-1, false));
+					state.emitMain(`${stackF(-1)} = context.abc.applicationDomain.findDefinition(${getname(param(0))});`);
+					break;
 				case Bytecode.FINDPROPSTRICT: {
 					const mn = abc.getMultiname(param(0));
 					state.emitMain(`// ${mn}`);
