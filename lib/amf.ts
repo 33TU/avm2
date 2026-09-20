@@ -287,6 +287,19 @@ function readU29(ba: ByteArray): number {
 	return val;
 }
 
+// AMF vector elements use fixed-width network byte order, independent of ByteArray.endian.
+function readVectorInt(ba: ByteArray): number {
+	return (ba.readUnsignedByte() << 24) | (ba.readUnsignedByte() << 16)
+		| (ba.readUnsignedByte() << 8) | ba.readUnsignedByte();
+}
+
+function writeVectorInt(ba: ByteArray, value: number) {
+	ba.writeByte(value >>> 24);
+	ba.writeByte(value >>> 16);
+	ba.writeByte(value >>> 8);
+	ba.writeByte(value);
+}
+
 function writeU29(ba: ByteArray, value: number) {
 	// C++ version
 	// https://github.com/Ventero/amf-cpp/blob/master/src/types/amfinteger.cpp#L13
@@ -458,11 +471,11 @@ function readAMF3Value(ba: ByteArray, references: AMF3ReferenceTables) {
 				return references.objects[u29o >> 1];
 			}
 			const length = u29o >> 1;
-			const fixed = ba.readUnsignedInt();
+			const fixed = ba.readUnsignedByte();
 			const vector: Int32Vector = ba.sec.Int32Vector.axClass.axConstruct([length, fixed]);
 			references.objects.push(vector);
 			for (let i = 0; i < length; i++) {
-				vector.axSetPublicProperty(i, readU29(ba));
+				vector.axSetPublicProperty(i, readVectorInt(ba));
 			}
 			return vector;
 		}
@@ -472,11 +485,11 @@ function readAMF3Value(ba: ByteArray, references: AMF3ReferenceTables) {
 				return references.objects[u29o >> 1];
 			}
 			const length = u29o >> 1;
-			const fixed = ba.readUnsignedInt();
+			const fixed = ba.readUnsignedByte();
 			const vector: Uint32Vector = ba.sec.Uint32Vector.axClass.axConstruct([length, fixed]);
 			references.objects.push(vector);
 			for (let i = 0; i < length; i++) {
-				vector.axSetPublicProperty(i, readU29(ba));
+				vector.axSetPublicProperty(i, readVectorInt(ba));
 			}
 			return vector;
 		}
@@ -486,7 +499,7 @@ function readAMF3Value(ba: ByteArray, references: AMF3ReferenceTables) {
 				return references.objects[u29o >> 1];
 			}
 			const length = u29o >> 1;
-			const fixed = ba.readUnsignedInt();
+			const fixed = ba.readUnsignedByte();
 			const vector: Float64Vector = ba.sec.Float64Vector.axClass.axConstruct([length, fixed]);
 			references.objects.push(vector);
 			for (let i = 0; i < length; i++) {
@@ -501,7 +514,7 @@ function readAMF3Value(ba: ByteArray, references: AMF3ReferenceTables) {
 			}
 
 			const length = u29o >> 1;
-			const fixed = ba.readUnsignedInt();
+			const fixed = ba.readUnsignedByte();
 			const type = ba.sec.classAliases.getClassByAlias(readUTF8(ba, references));
 			const vector: GenericVector = <any> ba.sec.getVectorClass(type).axConstruct([length, fixed]);
 			references.objects.push(vector);
@@ -601,9 +614,9 @@ function writeAMF3Value(ba: ByteArray, value: any, references: AMF3ReferenceTabl
 					break;
 				}
 				writeU29(ba, (vector.length << 1) | 1);
-				ba.writeUnsignedInt(+vector.fixed);
+				ba.writeByte(+vector.fixed);
 				for (let i = 0; i < vector.length; i++) {
-					writeU29(ba, vector.axGetPublicProperty(i));
+					writeVectorInt(ba, vector.axGetPublicProperty(i));
 				}
 			} else if (ba.sec.Uint32Vector.axIsType(value)) {
 				const vector = <Uint32Vector>value;
@@ -612,9 +625,9 @@ function writeAMF3Value(ba: ByteArray, value: any, references: AMF3ReferenceTabl
 					break;
 				}
 				writeU29(ba, (vector.length << 1) | 1);
-				ba.writeUnsignedInt(+vector.fixed);
+				ba.writeByte(+vector.fixed);
 				for (let i = 0; i < vector.length; i++) {
-					writeU29(ba, vector.axGetPublicProperty(i));
+					writeVectorInt(ba, vector.axGetPublicProperty(i));
 				}
 			} else if (ba.sec.Float64Vector.axIsType(value)) {
 				const vector = <Float64Vector>value;
@@ -623,7 +636,7 @@ function writeAMF3Value(ba: ByteArray, value: any, references: AMF3ReferenceTabl
 					break;
 				}
 				writeU29(ba, (vector.length << 1) | 1);
-				ba.writeUnsignedInt(+vector.fixed);
+				ba.writeByte(+vector.fixed);
 				for (let i = 0; i < vector.length; i++) {
 					writeDouble(ba, vector.axGetPublicProperty(i));
 				}
@@ -634,7 +647,7 @@ function writeAMF3Value(ba: ByteArray, value: any, references: AMF3ReferenceTabl
 					break;
 				}
 				writeU29(ba, (vector.length << 1) | 1);
-				ba.writeUnsignedInt(+vector.fixed);
+				ba.writeByte(+vector.fixed);
 				writeUTF8(ba, ba.sec.classAliases.getAliasByClass(value.axClass.type) || '*', references);
 				for (let i = 0; i < vector.length; i++) {
 					writeAMF3Value(ba, vector.axGetPublicProperty(i), references);
