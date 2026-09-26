@@ -28,7 +28,9 @@ if (USE_WEAK) {
 // 	maybe eve solve the orphan-issue in otherway alltogether
 export class OrphanManager {
 
-	static orphans: Record<number, WeakRef<DisplayObject> | DisplayObject> = Object.create(null);
+	// A Map iterates thousands of never-parented clips far faster than a
+	// keyed object, and tolerates deletion while iterating.
+	static orphans: Map<number, WeakRef<DisplayObject> | DisplayObject> = new Map();
 	static totalOrphansCount: number = 0;
 
 	static addOrphan(orphan: DisplayObject = null) {
@@ -46,27 +48,27 @@ export class OrphanManager {
 			return;
 		}
 
-		if (orphan.id in this.orphans)
+		if (this.orphans.has(orphan.id))
 			return;
 
-		this.orphans[orphan.id] = USE_WEAK ? new self.WeakRef(orphan) : orphan;
+		this.orphans.set(orphan.id, USE_WEAK ? new self.WeakRef(orphan) : orphan);
 		this.totalOrphansCount++;
 	}
 
 	static removeOrphan(orphan: DisplayObject) {
-		if (!(orphan.id in this.orphans))
+		if (!this.orphans.has(orphan.id))
 			return;
 
 		this.totalOrphansCount--;
-		delete this.orphans[orphan.id];
+		this.orphans.delete(orphan.id);
 	}
 
 	static updateOrphans() {
 
 		let orphan: WeakRef<DisplayObject> | DisplayObject;
 
-		for (const key in this.orphans) {
-			orphan = this.orphans[key];
+		for (const [key, entry] of this.orphans) {
+			orphan = entry;
 
 			if (USE_WEAK && orphan) {
 				orphan = (<WeakRef<DisplayObject>> orphan)?.deref();
@@ -79,12 +81,12 @@ export class OrphanManager {
 				} else {
 					// delete, orphan has parent
 					this.totalOrphansCount--;
-					delete this.orphans[key];
+					this.orphans.delete(key);
 				}
 			} else {
 				console.debug('[OrphanManager] Orphan was deleted by GC:', key);
 				this.totalOrphansCount--;
-				delete this.orphans[key];
+				this.orphans.delete(key);
 			}
 		}
 	}
