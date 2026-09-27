@@ -25,6 +25,8 @@ export class Multiname {
 
 	private _scope: AXObject | WeakRef<AXObject> = null;
 	private _value: AXObject | WeakRef<AXObject> = null;
+	private _scopeWeak: boolean = false;
+	private _valueWeak: boolean = false;
 	private _key: string = null;
 
 	constructor(
@@ -82,35 +84,50 @@ export class Multiname {
 		this.resolved = {};
 
 		this._scope = null;
+		this._scopeWeak = false;
+	}
+
+	// Scope lookups cache their last scope object and result here. Class and
+	// global objects live as long as their SWF, so they are held strongly; only
+	// ordinary instances go through a WeakRef (a cached `this` would otherwise
+	// keep a removed avatar alive). Weak everywhere cost 14 to 20 percent of the
+	// as3pb bench: a deref on every hit and a WeakRef allocation on every miss.
+	private static _longLived(v: AXObject): boolean {
+		return (<any>v).tPrototype !== undefined || (<any>v).globalInfo !== undefined;
 	}
 
 	public get scope(): AXObject {
-		return (!this._scope || !Multiname._isWeak)
-			? <AXObject> this._scope
-			: (<WeakRef<AXObject>> this._scope).deref();
+		return this._scopeWeak
+			? (<WeakRef<AXObject>> this._scope).deref()
+			: <AXObject> this._scope;
 	}
 
 	public set scope(v: AXObject) {
-		if (Multiname._isWeak && v) {
-			this._scope = new self.WeakRef<AXObject>(v);
+		if (Multiname._isWeak && v && !Multiname._longLived(v)) {
+			if (!this._scopeWeak || (<WeakRef<AXObject>> this._scope).deref() !== v)
+				this._scope = new self.WeakRef<AXObject>(v);
+			this._scopeWeak = true;
 			return;
 		}
 		this._scope = v;
+		this._scopeWeak = false;
 	}
 
 	public get value(): AXObject {
-		return (!this._value || !Multiname._isWeak)
-			? <AXObject> this._value
-			: (<WeakRef<AXObject>> this._value).deref();
+		return this._valueWeak
+			? (<WeakRef<AXObject>> this._value).deref()
+			: <AXObject> this._value;
 	}
 
 	public set value(v: AXObject) {
-		if (Multiname._isWeak && v) {
-			this._value = new self.WeakRef<AXObject>(v);
+		if (Multiname._isWeak && v && !Multiname._longLived(v)) {
+			if (!this._valueWeak || (<WeakRef<AXObject>> this._value).deref() !== v)
+				this._value = new self.WeakRef<AXObject>(v);
+			this._valueWeak = true;
 			return;
 		}
-
 		this._value = v;
+		this._valueWeak = false;
 	}
 
 	public key(): string {
