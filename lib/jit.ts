@@ -1634,8 +1634,17 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 						// eslint-disable-next-line max-len
 						state.emitMain(`context.setproperty(context.runtimename(${getname(param(0))}, ${stack1}, ${stack2}), ${stack0}, ${stack3});`);
 					} else {
+						// Numeric index writes (vec[i] = x) built a runtime multiname and
+						// took the generic setproperty path on every element. Integer
+						// indexes go straight to axSetNumericProperty unless the class
+						// customises axSetProperty without its own numeric setter
+						// (Array, XML), which keeps the generic path.
+						state.emitMain(`if (typeof ${stack1} === "number" && (${stack1} >>> 0) === ${stack1} && ${stack2} && ${stack2}[AX_CLASS_SYMBOL] && (${stack2}.axSetProperty === context.objectSetProperty || ${stack2}.axSetNumericProperty !== context.objectSetNumericProperty)) {`);
+						state.emitMain(`    ${stack2}.axSetNumericProperty(${stack1}, ${stack0});`);
+						state.emitMain('} else {');
 						// eslint-disable-next-line max-len
-						state.emitMain(`context.setproperty(context.runtimename(${getname(param(0))}, ${stack1}), ${stack0}, ${stack2});`);
+						state.emitMain(`    context.setproperty(context.runtimename(${getname(param(0))}, ${stack1}), ${stack0}, ${stack2});`);
+						state.emitMain('}');
 					}
 					break;
 				}
@@ -2216,6 +2225,9 @@ export class Context {
 
 		return b.axGetProperty(mn);
 	}
+
+	get objectSetProperty() { return ASObject.prototype.axSetProperty; }
+	get objectSetNumericProperty() { return ASObject.prototype.axSetNumericProperty; }
 
 	createSlotWriter(index: number) {
 		const mn = this.names[index];
