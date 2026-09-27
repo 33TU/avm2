@@ -6,6 +6,7 @@ export interface IAVM2Settings {
 	NO_CHECK_BOXED_THIS: boolean;
 	NO_HOIST_MULTINAME: boolean;
 	CHEK_TRAIT_GET_CALL: boolean;
+	LAZY_METHOD_COMPILE: boolean;
 	CHEK_TRAIT_FIND_PROP: boolean;
 	CHEK_TRAIT_SET: boolean;
 	CACHE_DOMAIN_MEMORY_WRITES: boolean;
@@ -158,6 +159,13 @@ export const Settings: IAVM2Settings = ConfigManager.instance.addStore('avm2', {
 	 * avoid generate redundant if-block
 	 */
 	CHEK_TRAIT_GET_CALL: true,
+
+	/**
+	 * @description Compile a class method on its first call instead of when the class
+	 * is created. About 88 percent of compiled methods never ran in an AQW session
+	 * (6053 of 6896, 1.2 s of 1.5 s compile time, 47 of 60 MB generated source).
+	 */
+	LAZY_METHOD_COMPILE: true,
 	/**
 	 * @description Falling to getProperty when FINDPROPSTRICT use scope of this (scope0),
 	 * this can apply CHEK_TRAIT_GET_CALL for generated code
