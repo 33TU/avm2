@@ -1615,7 +1615,7 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 						state.emitBeginMain('} else {');
 					}
 
-					if (Settings.CACHE_DOMAIN_MEMORY_WRITES && domMem) {
+					if (Settings.CACHE_SLOT_WRITES || (Settings.CACHE_DOMAIN_MEMORY_WRITES && domMem)) {
 						const nameIndex = state.getMultinameIndex(param(0));
 						slotWriters.add(nameIndex);
 						state.emitMain(`setProperty${nameIndex}(${stack0}, ${stack1});`);

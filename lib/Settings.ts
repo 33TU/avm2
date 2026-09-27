@@ -10,6 +10,7 @@ export interface IAVM2Settings {
 	CHEK_TRAIT_FIND_PROP: boolean;
 	CHEK_TRAIT_SET: boolean;
 	CACHE_DOMAIN_MEMORY_WRITES: boolean;
+	CACHE_SLOT_WRITES: boolean;
 	CHEK_SUPER_TRAITS: boolean;
 	CHECK_FAST_CONSTRUCTOR: boolean;
 	OPTIMISE_ON_IR: boolean;
@@ -178,6 +179,12 @@ export const Settings: IAVM2Settings = ConfigManager.instance.addStore('avm2', {
 	CHEK_TRAIT_SET: true,
 	// Cache resolved writable slots only in methods using domain-memory opcodes.
 	CACHE_DOMAIN_MEMORY_WRITES: true,
+	/**
+	 * @description Use the cached slot writer for property writes in every compiled
+	 * method, not only in domain-memory methods. Other receivers than `this`
+	 * otherwise always took the generic context.setproperty path.
+	 */
+	CACHE_SLOT_WRITES: true,
 	/**
 	 * @description Check super class traits when field was extended, this can be unstable and has performance hit
 	 */
