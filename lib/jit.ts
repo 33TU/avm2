@@ -1639,12 +1639,15 @@ export function compile(methodInfo: MethodInfo, options: ICompilerOptions = {}):
 						// indexes go straight to axSetNumericProperty unless the class
 						// customises axSetProperty without its own numeric setter
 						// (Array, XML), which keeps the generic path.
-						state.emitMain(`if (typeof ${stack1} === "number" && (${stack1} >>> 0) === ${stack1} && ${stack2} && ${stack2}[AX_CLASS_SYMBOL] && (${stack2}.axSetProperty === context.objectSetProperty || ${stack2}.axSetNumericProperty !== context.objectSetNumericProperty)) {`);
-						state.emitMain(`    ${stack2}.axSetNumericProperty(${stack1}, ${stack0});`);
-						state.emitMain('} else {');
+						if (Settings.INDEX_WRITE_FAST_PATH) {
+							state.emitMain(`if (typeof ${stack1} === "number" && (${stack1} >>> 0) === ${stack1} && ${stack2} && ${stack2}[AX_CLASS_SYMBOL] && (${stack2}.axSetProperty === context.objectSetProperty || ${stack2}.axSetNumericProperty !== context.objectSetNumericProperty)) {`);
+							state.emitMain(`    ${stack2}.axSetNumericProperty(${stack1}, ${stack0});`);
+							state.emitMain('} else {');
+						}
 						// eslint-disable-next-line max-len
 						state.emitMain(`    context.setproperty(context.runtimename(${getname(param(0))}, ${stack1}), ${stack0}, ${stack2});`);
-						state.emitMain('}');
+						if (Settings.INDEX_WRITE_FAST_PATH)
+							state.emitMain('}');
 					}
 					break;
 				}

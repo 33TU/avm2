@@ -11,6 +11,8 @@ export interface IAVM2Settings {
 	CHEK_TRAIT_SET: boolean;
 	CACHE_DOMAIN_MEMORY_WRITES: boolean;
 	CACHE_SLOT_WRITES: boolean;
+	INDEX_WRITE_FAST_PATH: boolean;
+	STRONG_CLASS_SCOPE_REFS: boolean;
 	CHEK_SUPER_TRAITS: boolean;
 	CHECK_FAST_CONSTRUCTOR: boolean;
 	OPTIMISE_ON_IR: boolean;
@@ -185,6 +187,16 @@ export const Settings: IAVM2Settings = ConfigManager.instance.addStore('avm2', {
 	 * otherwise always took the generic context.setproperty path.
 	 */
 	CACHE_SLOT_WRITES: true,
+	/**
+	 * @description Write non-negative integer indexes (vec[i] = x) through
+	 * axSetNumericProperty instead of the generic runtime-multiname path.
+	 */
+	INDEX_WRITE_FAST_PATH: true,
+	/**
+	 * @description Hold class and global objects strongly in the multiname
+	 * lookup cache; ordinary instances always go through a WeakRef.
+	 */
+	STRONG_CLASS_SCOPE_REFS: true,
 	/**
 	 * @description Check super class traits when field was extended, this can be unstable and has performance hit
 	 */

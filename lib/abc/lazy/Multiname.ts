@@ -93,7 +93,8 @@ export class Multiname {
 	// keep a removed avatar alive). Weak everywhere cost 14 to 20 percent of the
 	// as3pb bench: a deref on every hit and a WeakRef allocation on every miss.
 	private static _longLived(v: AXObject): boolean {
-		return (<any>v).tPrototype !== undefined || (<any>v).globalInfo !== undefined;
+		return Settings.STRONG_CLASS_SCOPE_REFS &&
+			((<any>v).tPrototype !== undefined || (<any>v).globalInfo !== undefined);
 	}
 
 	public get scope(): AXObject {
